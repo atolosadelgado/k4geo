@@ -12,13 +12,13 @@
 #include <iostream>
 #include <math.h>
 
-using namespace std;
 using namespace dd4hep;
+
 
 struct wire
 {
   dd4hep::Volume mother_volume;
-  string type; // F = field wire, S = sense wire, G = guard wire
+  std::string type; // F = field wire, S = sense wire, G = guard wire
   int num; // how many wires for the layer being considered
   double radius; // radial position of the wire at z = 0
   double delta_phi; // delta phi between two wires of this type
@@ -27,7 +27,7 @@ struct wire
   double thickness; // thickness of the core of the wire (no coating)
   double halflength; // wire z extent before stereo angle rotation
   dd4hep::Volume volume; // actual volume of the wire
-  string name;
+  std::string name;
 };
 
 namespace {
@@ -38,7 +38,7 @@ struct CDCHBuild : public dd4hep::xml::tools::VolumeBuilder {
   CDCHBuild(dd4hep::Detector& description, xml_elt_t e, dd4hep::SensitiveDetector sens);
 
   double diff_of_squares(double a, double b);
-  void apply_wire_coating(struct wire& w, double outwrap, double halflength, string material);
+  void apply_wire_coating(struct wire& w, double outwrap, double halflength, std::string material);
   void PlaceGuardWires(struct wire& w, double outwrap, double halflength, int SL, int ilayer);
   void build_layer(DetElement parent, Volume parentVol, dd4hep::SensitiveDetector sens);
 };
@@ -56,7 +56,7 @@ double CDCHBuild::diff_of_squares(double a, double b) {
   return diff;
 }
 
-void CDCHBuild::apply_wire_coating(struct wire& w, double outwrap, double halflength, string material = "Silver"){
+void CDCHBuild::apply_wire_coating(struct wire& w, double outwrap, double halflength, std::string material = "Silver"){
   dd4hep::Tube WrapTube(w.thickness, w.thickness + 0.5 * outwrap, halflength);
   dd4hep::Volume WireWrapVol(w.name + "_coating", WrapTube, description.material(material));
   dd4hep::Tube TotalWire(0.0, w.thickness + 0.5 * outwrap, halflength);
@@ -75,7 +75,7 @@ void CDCHBuild::PlaceGuardWires(struct wire& w, double outwrap, double halflengt
 
   dd4hep::Transform3D T(transl * rot_stereo);
 
-  string wirewrapname = "WireWrap_SL";
+  std::string wirewrapname = "WireWrap_SL";
   wirewrapname += std::to_string(SL);
   wirewrapname += "_layer";
   wirewrapname += std::to_string(ilayer);
@@ -84,7 +84,7 @@ void CDCHBuild::PlaceGuardWires(struct wire& w, double outwrap, double halflengt
   wirewrapname += "_stereo";
   wirewrapname += std::to_string(w.stereo);
 
-  string wirename = "Wire_SL";
+  std::string wirename = "Wire_SL";
   wirename += std::to_string(SL);
   wirename += "_layer";
   wirename += std::to_string(ilayer);
@@ -253,8 +253,8 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
   std::vector<dd4hep::Volume> lvLayerVol;
   std::vector<dd4hep::Volume> lvFwireVol, lvGwireVol;
 
-  string wirecol, gascol, wholeHyperboloidVolumeName;
-  string lvFwireName, lvSwireName;
+  std::string wirecol, gascol, wholeHyperboloidVolumeName;
+  std::string lvFwireName, lvSwireName;
 
   struct wire guard_wires{}, field_wires_bottom{}, field_wires_center{}, field_wires_top{}, sense_wires{};
 
@@ -309,7 +309,7 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
       guard_wires.stereo = epsilonInGwRing;
       guard_wires.thickness = 0.5 * InGWireShellThickIn * wireThicknessDilution;  // half the inner thickness as radius of tube
       guard_wires.halflength = zlength;
-      guard_wires.name = string("Gwire_inner_stereoplus");
+      guard_wires.name = std::string("Gwire_inner_stereoplus");
 
       dd4hep::Tube Gwire(0.0, guard_wires.thickness, halflength);
       lvGwireVol.push_back(dd4hep::Volume("Gwire_inner", Gwire, description.material("G4_Al")));
@@ -322,7 +322,7 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
       guard_wires.radius = inGuardRad + inGWradii + extShiftFW;
       guard_wires.phioffset = phi_offset_cell_start + phi_offset;
       guard_wires.stereo = -1.0 * epsilonInGwRing;
-      guard_wires.name = string("Gwire_inner_stereominus");
+      guard_wires.name = std::string("Gwire_inner_stereominus");
       CDCHBuild::PlaceGuardWires(guard_wires, FWireShellThickOut, halflength, SL, -1);
 
       drop = radius_layer_0 * dropFactor;
@@ -355,7 +355,7 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
       field_wires_top.mother_volume = lvLayerVol.back();
 
       lvFwireName = dd4hep::_toString(SL, "lvFwire_%d_init");
-      field_wires_top.name = string(lvFwireName);
+      field_wires_top.name = std::string(lvFwireName);
 
       dd4hep::Tube Fwire(0.0, field_wires_top.thickness, halflength);
       lvFwireVol.push_back(dd4hep::Volume(lvFwireName, Fwire, description.material("G4_Al")));
@@ -422,7 +422,7 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
       field_wires_bottom.stereo = sign_epsilon * epsilon;
       field_wires_bottom.thickness = 0.5 * FWireShellThickIn * wireThicknessDilution;
       field_wires_bottom.halflength = zlength;
-      field_wires_bottom.name = dd4hep::_toString(SL, "Wire_SL%d") + dd4hep::_toString(ilayer, "_layer%d") + string("_type") + field_wires_bottom.type + dd4hep::_toString(field_wires_bottom.stereo, "_stereo%f_bottom");
+      field_wires_bottom.name = dd4hep::_toString(SL, "Wire_SL%d") + dd4hep::_toString(ilayer, "_layer%d") + std::string("_type") + field_wires_bottom.type + dd4hep::_toString(field_wires_bottom.stereo, "_stereo%f_bottom");
 
       //------------------------------------------------------------------------
       // Define the field wire name and build the field wire volume
@@ -485,7 +485,7 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
       sense_wires.stereo = sign_epsilon * epsilon;
       sense_wires.thickness = 0.5 * SWireShellThickIn * wireThicknessDilution;
       sense_wires.halflength = zlength;
-      sense_wires.name = dd4hep::_toString(SL, "Wire_SL%d") + dd4hep::_toString(ilayer, "_layer%d") + string("_type") + sense_wires.type + dd4hep::_toString(sense_wires.stereo, "_stereo%f");
+      sense_wires.name = dd4hep::_toString(SL, "Wire_SL%d") + dd4hep::_toString(ilayer, "_layer%d") + std::string("_type") + sense_wires.type + dd4hep::_toString(sense_wires.stereo, "_stereo%f");
 
       //------------------------------------------------------------------------
       // Define the sense wire name and build the sense wire volume
@@ -512,7 +512,7 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
       field_wires_center.thickness = 0.5 * centerFWireShellThickIn * wireThicknessDilution;
       field_wires_center.halflength = zlength;
       field_wires_center.volume = FwireVol;
-      field_wires_center.name = dd4hep::_toString(SL, "Wire_SL%d") + dd4hep::_toString(ilayer, "_layer%d") + string("_type") + field_wires_center.type + dd4hep::_toString(field_wires_center.stereo, "_stereo%f_center");
+      field_wires_center.name = dd4hep::_toString(SL, "Wire_SL%d") + dd4hep::_toString(ilayer, "_layer%d") + std::string("_type") + field_wires_center.type + dd4hep::_toString(field_wires_center.stereo, "_stereo%f_center");
       apply_wire_coating(field_wires_center, centerFWireShellThickOut, halflength);
 
       // derive a phi offset to englobe the 'left' (clockwise) wires inside the sensitive volume (center field wires are the thickest)
@@ -565,7 +565,7 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
       field_wires_top.thickness = 0.5 * FWireShellThickIn * wireThicknessDilution;
       field_wires_top.halflength = zlength;
       field_wires_top.volume = FwireVol;
-      field_wires_top.name = dd4hep::_toString(SL, "Wire_SL%d") + dd4hep::_toString(ilayer, "_layer%d") + string("_type") + field_wires_top.type + dd4hep::_toString(field_wires_top.stereo, "_stereo%f_top");
+      field_wires_top.name = dd4hep::_toString(SL, "Wire_SL%d") + dd4hep::_toString(ilayer, "_layer%d") + std::string("_type") + field_wires_top.type + dd4hep::_toString(field_wires_top.stereo, "_stereo%f_top");
       apply_wire_coating(field_wires_top, FWireShellThickOut, halflength);
 
       //if(setWireSensitive){
@@ -595,7 +595,7 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
       // loop to arrange the wires in phi, starting with the sense wires
       for (int phi_index = 0; phi_index < sense_wires.num; phi_index++) {
         // Place the sensitive volume inside the hyperbioloid with phi and stereo angle rotation
-        string cellID_volume_name = dd4hep::_toString(SL, "cellIDvolume_SL_%d") + dd4hep::_toString(ilayer, "_layer_%d") + dd4hep::_toString(phi_index, "_phi_%d");
+        std::string cellID_volume_name = dd4hep::_toString(SL, "cellIDvolume_SL_%d") + dd4hep::_toString(ilayer, "_layer_%d") + dd4hep::_toString(phi_index, "_phi_%d");
         dd4hep::Volume cellID_volume = dd4hep::Volume(cellID_volume_name, cellID_tube_segment, description.material("GasHe_90Isob_10"));
         cellID_volume.setSensitiveDetector(sens_det);
         // phi rotation
@@ -721,7 +721,7 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
       guard_wires.stereo = epsilonOutGwRing;
       guard_wires.thickness = 0.5 * OutGWireShellThickIn * wireThicknessDilution;
       guard_wires.halflength = zlength;
-      guard_wires.name = string("Gwire_outer_stereominus");
+      guard_wires.name = std::string("Gwire_outer_stereominus");
 
       dd4hep::Tube Gwire(0.0, guard_wires.thickness, halflength);
       lvGwireVol.push_back(dd4hep::Volume("Gwire_outer", Gwire, description.material("G4_Al")));
@@ -734,7 +734,7 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
       guard_wires.radius = outGuardRad + inGWradii + extShiftFW;
       guard_wires.phioffset = phi_offset_cell_start + phi_offset;
       guard_wires.stereo = -1.0 * epsilonOutGwRing;
-      guard_wires.name = string("Gwire_outer_stereoplus");
+      guard_wires.name = std::string("Gwire_outer_stereoplus");
       CDCHBuild::PlaceGuardWires(guard_wires, OutGWireShellThickOut, halflength, SL, -1);
     }
   }
@@ -779,7 +779,7 @@ static dd4hep::Ref_t create_element(dd4hep::Detector& description, xml_h e, dd4h
 
   xml_det_t x_det = e;
   CDCHBuild builder(description, x_det, sens_det);
-  string det_name = x_det.nameStr();
+  std::string det_name = x_det.nameStr();
 
   dd4hep::printout(dd4hep::DEBUG, "CreateCDCH", "Detector name: %s with ID: %s", det_name.c_str(), x_det.id());
 
