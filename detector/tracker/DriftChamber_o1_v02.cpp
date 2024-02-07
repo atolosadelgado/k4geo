@@ -15,7 +15,7 @@
 using namespace dd4hep;
 
 
-struct wire
+struct wire_DCH
 {
   dd4hep::Volume mother_volume;
   std::string type; // F = field wire, S = sense wire, G = guard wire
@@ -38,8 +38,8 @@ struct CDCHBuild : public dd4hep::xml::tools::VolumeBuilder {
   CDCHBuild(dd4hep::Detector& description, xml_elt_t e, dd4hep::SensitiveDetector sens);
 
   double diff_of_squares(double a, double b);
-  void apply_wire_coating(struct wire& w, double outwrap, double halflength, std::string material);
-  void PlaceGuardWires(struct wire& w, double outwrap, double halflength, int SL, int ilayer);
+  void apply_wire_coating(struct wire_DCH& w, double outwrap, double halflength, std::string material);
+  void PlaceGuardWires(struct wire_DCH& w, double outwrap, double halflength, int SL, int ilayer);
   void build_layer(DetElement parent, Volume parentVol, dd4hep::SensitiveDetector sens);
 };
 
@@ -56,7 +56,7 @@ double CDCHBuild::diff_of_squares(double a, double b) {
   return diff;
 }
 
-void CDCHBuild::apply_wire_coating(struct wire& w, double outwrap, double halflength, std::string material = "Silver"){
+void CDCHBuild::apply_wire_coating(struct wire_DCH& w, double outwrap, double halflength, std::string material = "Silver"){
   dd4hep::Tube WrapTube(w.thickness, w.thickness + 0.5 * outwrap, halflength);
   dd4hep::Volume WireWrapVol(w.name + "_coating", WrapTube, description.material(material));
   dd4hep::Tube TotalWire(0.0, w.thickness + 0.5 * outwrap, halflength);
@@ -66,7 +66,7 @@ void CDCHBuild::apply_wire_coating(struct wire& w, double outwrap, double halfle
   w.volume = WireVol;
 }
 
-void CDCHBuild::PlaceGuardWires(struct wire& w, double outwrap, double halflength, int SL = 999,
+void CDCHBuild::PlaceGuardWires(struct wire_DCH& w, double outwrap, double halflength, int SL = 999,
                            int ilayer = 999) {
 
   dd4hep::RotationZYX rot(0., 0., w.stereo);
@@ -256,7 +256,7 @@ void CDCHBuild::build_layer(DetElement parent, Volume parentVol, dd4hep::Sensiti
   std::string wirecol, gascol, wholeHyperboloidVolumeName;
   std::string lvFwireName, lvSwireName;
 
-  struct wire guard_wires{}, field_wires_bottom{}, field_wires_center{}, field_wires_top{}, sense_wires{};
+  struct wire_DCH guard_wires{}, field_wires_bottom{}, field_wires_center{}, field_wires_top{}, sense_wires{};
 
   for (int SL = 0; SL < nSuperLayer; ++SL) {
 
